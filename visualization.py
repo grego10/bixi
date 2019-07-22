@@ -9,6 +9,9 @@ def read():
     f = 'OD_2019-05.csv'
     data = pd.read_csv(f)
     
+    #filtering out trips that were less tha
+    data = data.drop(data[data['duration_sec'] < 120].index)
+    
     #parsing through date data
     data['start_date'] = pd.to_datetime(data['start_date'], format='%Y-%m-%d', errors='coerce')
     data['end_date'] = pd.to_datetime(data['end_date'], format='%Y-%m-%d', errors='coerce')
@@ -73,9 +76,6 @@ def visualizePerHourWeek(data, column_name, color='#494949', title='Departure pe
     plt.show()
 
 def foliumMap():
-    import folium
-    from folium.plugins import MarkerCluster
-
     # Create base map
     Montreal = [45.508154, -73.587450]
     map = folium.Map(location = Montreal,
@@ -98,7 +98,7 @@ def foliumMap():
                             color = "gray", 
                             fill_opacity = 0.9).add_to(marker_cluster)
         
-    f = 'map_station_cluster.html'
+    f = 'maps/map_station_cluster.html'
     map.save(f)
     
 def flowCount(data, start_time, end_time):
@@ -135,7 +135,7 @@ def densityMap(stations):
     Montreal = [45.508154, -73.587450]
     map = folium.Map(location = Montreal,
                 zoom_start = 12,
-                tiles = "CartoDB dark_matter")
+                tiles = "CartoDB positron")
     
     stations['radius'] = pd.Series( index=data.index)
     
@@ -155,14 +155,14 @@ def densityMap(stations):
   
     
     for _lat, _lon, _rad, _color, _name, _nd in zip(lat, lon, rad, color, name, net_dep):
-        folium.CircleMarker(location = [_lat,_lon], 
-                            radius = _rad/90,
+        folium.Circle(location = [_lat,_lon], 
+                            radius = _rad/5,
                             color = _color,
                             tooltip = _name + " / net. dep:" +str(_nd),
                             fill = True).add_to(map)
   
     
-    f = 'map_density.html'
+    f = 'maps/map_density_840_1260.html'
     map.save(f)
 
 if __name__ == '__main__':
@@ -174,13 +174,13 @@ if __name__ == '__main__':
     from folium.plugins import MarkerCluster
     
     data = read()
+    stations_flow = flowCount(data, 840, 1260)
     
-    stations_flow = flowCount(data, 300, 660)
-    densityMap(stations)
-    foliumMap()
-    visualizePerDay(data, 'start_date')
-    visualizePerHourWeek(data, 'time_slice')
-    visualizePerHourEnd(data, 'time_slice')
+    densityMap(stations_flow)
+    #foliumMap()
+    #visualizePerDay(data, 'start_date')
+    #visualizePerHourWeek(data, 'time_slice')
+    #visualizePerHourEnd(data, 'time_slice')
     
 
 
