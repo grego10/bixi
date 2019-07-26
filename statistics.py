@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-def read():
+def readTrips():
       
     data_files = glob.glob('data2018/OD_2018-*.csv')
     
@@ -16,6 +16,11 @@ def read():
     
     return data
 
+def readSTM():
+    data_file = 'data2018/stops.txt'
+    df = pd.read_csv(data_file)
+    df = df[df['stop_id'].astype(str).str.startswith('STATION')]
+    return df
 
 
 def summarizePerDay(data):
@@ -42,26 +47,55 @@ def mergeWeather(dataDay, dataWeather):
 def scatterPlot(dataDay):
     
     X = dataDay[['Mean Temp (°C)']].values
+    X_1 = dataDay[['Mean Temp (°C)']].values
+    X_2 = dataDay[['Mean Temp (°C)']].values
+    X_3 = dataDay[['Mean Temp (°C)']].values
     Y = dataDay[['departures_cnt']].values
     
+    #Linear regression
     linear_regressor = LinearRegression()
     linear_regressor.fit(X, Y)
     Y_pred_linear = linear_regressor.predict(X)
     
+    #polynmial degree 2 regression
     polynomial_feat = PolynomialFeatures(degree=2)
-    x_poly = polynomial_feat.fit_transform(X)
+    x_poly_2 = polynomial_feat.fit_transform(X)
     polynomial_regressor = LinearRegression()
-    polynomial_regressor.fit(x_poly, Y)
+    polynomial_regressor.fit(x_poly_2, Y)
     
-    Y_pred_poly = polynomial_regressor.predict(x_poly)
+    Y_pred_poly_2 = polynomial_regressor.predict(x_poly_2)
     
+    #polynmial degree 3 regression
+    polynomial_feat_3 = PolynomialFeatures(degree=3)
+    x_poly_3 = polynomial_feat_3.fit_transform(X)
+    polynomial_regressor_3 = LinearRegression()
+    polynomial_regressor_3.fit(x_poly_3, Y)
+    
+    Y_pred_poly_3 = polynomial_regressor_3.predict(x_poly_3)
+    
+    
+    #Ploting the data
     plt.figure(figsize=(20, 10))
     plt.title('Scatter Plot Temp (°C) and Number of Trips')
-    plt.scatter(X,Y,c='blue',marker='o')
+    plt.scatter(X_1,Y,c='blue',marker='o')
     plt.xlabel('Mean Temp (°C)')
     plt.ylabel('Number of Daily Trips')
-    plt.plot(X, Y_pred_linear, color='red')
-    plt.plot(X, Y_pred_poly, color='green')
+    plt.plot(X_1, Y_pred_linear, color='red')
+    
+    sort_axis = operator.itemgetter(0)
+    sorted_zip = sorted(zip(X_2,Y_pred_poly_2), key=sort_axis)
+    X_2, Y_pred_poly_2 = zip(*sorted_zip)
+    plt.plot(X_2, Y_pred_poly_2, color='green')
+    
+    sort_axis = operator.itemgetter(0)
+    sorted_zip = sorted(zip(X_3,Y_pred_poly_3), key=sort_axis)
+    X_3, Y_pred_poly_3 = zip(*sorted_zip)
+    plt.plot(X_3, Y_pred_poly_3, color='magenta')
+    
+    plt.plot(X_1, Y_pred_linear, '-r', label='degree=1')   
+    plt.plot(X_2, Y_pred_poly_2, '-g', label='degree=2')   
+    plt.plot(X_3, Y_pred_poly_3, '-m', label='degree=3')
+    plt.legend(loc='upper left')
     
     plt.rcParams.update({'font.size': 22})
     plt.show()
@@ -73,15 +107,18 @@ if __name__ == '__main__':
     import glob
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
+    import operator
     from sklearn.linear_model import LinearRegression
     from sklearn.preprocessing import PolynomialFeatures
     
-    data = read()
-    dataDay = summarizePerDay(data)
-    dataWeather = readWeather()
-    dataDay = mergeWeather(dataDay, dataWeather)
+    #data = readTrips()
+    #dataDay = summarizePerDay(data)
+    #dataWeather = readWeather()
+    #dataDay = mergeWeather(dataDay, dataWeather)
     
-    scatterPlot(dataDay)
+    dataSTM = readSTM()
+    
+    #scatterPlot(dataDay)
     
    
 
