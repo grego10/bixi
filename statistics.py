@@ -171,7 +171,39 @@ def scatterPlot(dataDay):
     
     plt.rcParams.update({'font.size': 22})
     plt.show()
+
+def scatterPlotMetro(dataBixi):
     
+    X = dataBixi[['distance_metro']].values
+    X_1 = dataBixi[['distance_metro']].values
+    X_2 = dataBixi[['distance_metro']].values
+    Y_1 = dataBixi[['start_cnt']].values
+    Y_2 = dataBixi[['end_cnt']].values       
+    
+    linear_regressor = LinearRegression()
+    linear_regressor.fit(X_1, Y_1)
+    Y_1_pred_linear = linear_regressor.predict(X_1)
+
+    linear_regressor = LinearRegression()
+    linear_regressor.fit(X_2, Y_2)
+    Y_2_pred_linear = linear_regressor.predict(X_2)                
+                  
+    plt.figure(figsize=(20, 10))
+    plt.title('Scatter Plot Distance Metro (km) and Number of Trips')
+    plt.scatter(X_1,Y_1,c='blue',marker='o')
+    plt.scatter(X_2,Y_2,c='red',marker='o')
+    plt.xlabel('Distance from metro (km)')
+    plt.ylabel('Number of Trips from a station in 2018')
+    
+    plt.plot(X_1, Y_1_pred_linear, color='blue')
+    plt.plot(X_2, Y_2_pred_linear, color='red')
+  
+    plt.plot(X_1, Y_1, 'ob', label='start cnt')   
+    plt.plot(X_2, Y_2, 'or', label='arrival cnt')   
+    plt.legend(loc='upper right')
+    
+    plt.rcParams.update({'font.size': 18})
+    plt.show()      
 
 if __name__ == '__main__':
     import pandas as pd
@@ -200,7 +232,7 @@ if __name__ == '__main__':
     
     
     
-    
+    scatterPlotMetro(dataBixi)
     
     #scatterPlot(dataDay)
 
