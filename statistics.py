@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+
+
 def readTrips():
       
     data_files = glob.glob('data2018/OD_2018-*.csv')
@@ -16,12 +18,68 @@ def readTrips():
     
     return data
 
-def readSTM():
+def readSTMStations():
     data_file = 'data2018/stops.txt'
     df = pd.read_csv(data_file)
     df = df[df['stop_id'].astype(str).str.startswith('STATION')]
     return df
 
+dataSTM = readSTMStations()
+
+def readBixiStations():
+    data_file = 'data2018/Stations_2018.csv'
+    df = pd.read_csv(data_file)
+    return df
+
+def bixiStationsDistance(bixiStations):
+    #adding a column distance
+    bixiStations['distance_metro'] = pd.Series( index=bixiStations.index)
+    bixiStations['distance_metro'] = bixiStations['distance_metro'].astype('float64')
+    
+    #calculating distance
+    bixiStations['distance_metro']= bixiStations.apply(calculateDistance, axis=1)
+    
+    return bixiStations
+
+def mergeDist_TripCnt(dataBixi, dataTripCnt):
+    
+    dataTripCnt = dataTripCnt.rename(columns={'station_code':'code'})
+    dataBixi = pd.merge(dataBixi, dataTripCnt, on='code')
+    
+    return dataBixi
+    
+def calculateDistance(row):
+    latitude = row['latitude']
+    longitude = row['longitude']
+    
+    smallest_distance = np.float64
+    
+    for index, row in dataSTM.iterrows():
+        temp = calDist(latitude, longitude, row['stop_lat'], row['stop_lon'])
+        if temp < smallest_distance:
+            smallest_distance = temp
+    
+    return smallest_distance
+
+def calDist(bixi_lat, bixi_lon, metro_lat, metro_lon):
+    # The math module contains a function named radians which converts from degrees to radians. 
+    bixi_lon = radians(bixi_lon) 
+    metro_lon = radians(metro_lon) 
+    bixi_lat = radians(bixi_lat) 
+    metro_lat = radians(metro_lat) 
+       
+    # Haversine formula  
+    dlon = metro_lon - bixi_lon  
+    dlat = metro_lat - bixi_lat 
+    a = sin(dlat / 2)**2 + cos(bixi_lat) * cos(metro_lat) * sin(dlon / 2)**2
+  
+    c = 2 * asin(sqrt(a))
+     
+    # Radius of earth in kilometers.
+    r = 6371
+       
+    # calculate the result 
+    return(c * r)
 
 def summarizePerDay(data):
     data = ((data['start_date'].dt.date).groupby(data['start_date'].dt.date)).count()
@@ -43,6 +101,20 @@ def readWeather():
 def mergeWeather(dataDay, dataWeather):
     dataDay = pd.merge(dataDay, dataWeather[['start_date','Mean Temp (°C)']], on='start_date')
     return dataDay
+
+def stationsTripCnt(data):
+    dataStart = data['start_station_code'].groupby(data['start_station_code']).count()
+    dataStart = dataStart.to_frame('start_cnt').reset_index()
+    dataStart = dataStart.rename(columns={'start_station_code':'station_code'})
+    
+    dataEnd = data['end_station_code'].groupby(data['end_station_code']).count()
+    dataEnd = dataEnd.to_frame('end_cnt').reset_index()
+    dataEnd = dataEnd.rename(columns={'end_station_code':'station_code'})
+    
+    data = pd.merge(dataStart, dataEnd, on='station_code')
+    
+    return data
+    
 
 def scatterPlot(dataDay):
     
@@ -110,17 +182,27 @@ if __name__ == '__main__':
     import operator
     from sklearn.linear_model import LinearRegression
     from sklearn.preprocessing import PolynomialFeatures
+    from math import radians, cos, sin, asin, sqrt 
     
-    #data = readTrips()
+    data = readTrips()
     #dataDay = summarizePerDay(data)
     #dataWeather = readWeather()
     #dataDay = mergeWeather(dataDay, dataWeather)
     
-    dataSTM = readSTM()
+    
+    dataBixi = readBixiStations()
+    
+    dataBixi = bixiStationsDistance(dataBixi)
+    dataTripCnt = stationsTripCnt(data)
+    
+    dataBixi = mergeDist_TripCnt(dataBixi, dataTripCnt)
+    
+    
+    
+    
+    
     
     #scatterPlot(dataDay)
-    
-   
 
 
     
