@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Jul 28 14:56:28 2019
-
 @author: greg0
 """
 
@@ -129,24 +128,45 @@ def cluster_trips(stations_clustered, data):
     data = data.groupby(['cluster_from','cluster_to']).size()
     data = data.to_frame('count').reset_index()
     
+    data['cluster_from'] = data['cluster_from'].astype('int64')
+    data['cluster_to'] = data['cluster_to'].astype('int64')
+    
+    return data
+
+def to_tuples(data):
+    
     subset = data[['cluster_from', 'cluster_to', 'count']]
     tuples = [tuple(x) for x in subset.values]
     
     return tuples
 
 def create_graph(data):
-    G = nx.Graph()
-    G.add_edges_from(data)
+    
+    total = data['count'].sum();
+    data['weight'] = pd.Series( index=data.index)
+    data['weight'] = data['count']/total
+    data = data.drop(data[data['weight'] < 0.01].index)
+    
+    data = data.rename(columns={'cluster_from':'from'})
+    data = data.rename(columns={'cluster_to':'to'})
+    G = nx.from_pandas_dataframe(data, 'from', 'to', ['weight'], create_using=nx.DiGraph())
     
     return G
+
+def style_graph(G):
+    color = ["#0000FF", "#FF0000", "#4B0082", "#FF1493", "#32CD32", "#FF4500", "#FFFF00", "#800000"]
+    
+    nx.draw(G, with_labels=True, node_color=color, node_size=1000)
+    plt.show()
+
 
 if __name__ == '__main__':
     import pandas as pd
     import numpy as np
     import glob
-    import folium
     import sklearn.cluster
     import networkx as nx
+    import matplotlib.pyplot as plt
     
     data = read_trips()
     
@@ -158,7 +178,10 @@ if __name__ == '__main__':
     
     data = cluster_trips(stations_clustered, data)
     
+    
     G = create_graph(data)
+    
+    style_graph(G)
     
     #map_clustured(stations_clustered)
     
