@@ -24,6 +24,7 @@ def readSTMStations():
     df = df[df['stop_id'].astype(str).str.startswith('STATION')]
     return df
 
+import pandas as pd
 dataSTM = readSTMStations()
 
 def readBixiStations():
@@ -52,7 +53,7 @@ def calculateDistance(row):
     latitude = row['latitude']
     longitude = row['longitude']
     
-    smallest_distance = np.float64
+    smallest_distance = 100000
     
     for index, row in dataSTM.iterrows():
         temp = calDist(latitude, longitude, row['stop_lat'], row['stop_lon'])
@@ -79,7 +80,7 @@ def calDist(bixi_lat, bixi_lon, metro_lat, metro_lon):
     r = 6371
        
     # calculate the result 
-    return(c * r)
+    return c * r
 
 def summarizePerDay(data):
     data = ((data['start_date'].dt.date).groupby(data['start_date'].dt.date)).count()
@@ -202,7 +203,7 @@ def scatterPlotMetro(dataBixi):
     plt.plot(X_2, Y_2, 'or', label='arrival cnt')   
     plt.legend(loc='upper right')
     
-    plt.rcParams.update({'font.size': 18})
+    plt.rcParams.update({'font.size': 22})
     plt.show()      
 
 if __name__ == '__main__':
