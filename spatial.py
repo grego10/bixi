@@ -140,26 +140,71 @@ def to_tuples(data):
     
     return tuples
 
-def create_graph(data):
+def create_graph_data(data):
     
     total = data['count'].sum();
     data['weight'] = pd.Series( index=data.index)
     data['weight'] = data['count']/total
-    data = data.drop(data[data['weight'] < 0.01].index)
+    
     
     data = data.rename(columns={'cluster_from':'from'})
     data = data.rename(columns={'cluster_to':'to'})
-    G = nx.from_pandas_dataframe(data, 'from', 'to', ['weight'], create_using=nx.DiGraph())
+    data = data.drop(data[data['weight'] < 0.005].index)
+    return data
     
-    return G
 
-def style_graph(G):
-    color = ["#0000FF", "#FF0000", "#4B0082", "#FF1493", "#32CD32", "#FF4500", "#FFFF00", "#800000"]
+def create_graph(data):
+    #data = data.drop(data[data['weight'] < 0.01].index)
     
+    G = nx.from_pandas_edgelist(data, 'from', 'to', edge_attr=True, create_using=nx.MultiDiGraph())
+    
+    
+    
+    #color = ["#0000FF", "#FF0000", "#4B0082", "#FF1493", "#32CD32", "#FF4500", "#FFFF00", "#800000"]
+    color = ["#0000FF", "#FF0000", "#4B0082", "#FF1493", "#32CD32", "#FF4500", "#FFFF00"]
+    #nx.draw(G, with_labels=True, node_color=color, node_size=1000)
     nx.draw(G, with_labels=True, node_color=color, node_size=1000)
     plt.show()
 
+def create_graphviz(data):
+    G = Digraph(format='png')
+    
+    G.attr(rankdir='LR', size='10')
+    G.attr('node', shape='circle')
+    
+    nodelist = []
+    data = data.drop(['count'], axis=1)
+    data['from'] =  pd.to_numeric(data['from'], downcast='integer')
+    data['to'] =  pd.to_numeric(data['to'], downcast='integer')
+    data['from'] =  data['from'].apply(str)
+    data['to'] =  data['to'].apply(str)
+    
+    
+            
+    for idx, row in data.iterrows():
+        node1, node2, weight = [str(i) for i in row]
 
+        if node1 not in nodelist:
+            G.node(node1)
+            
+            nodelist.append(node2)
+        if node2 not in nodelist:
+            G.node(node2)
+            nodelist.append(node2)
+        
+        percent = float(weight)
+        
+        percent = percent*100
+        
+        percent = round(percent, 2)
+        
+        percent = str(percent)
+        
+        G.edge(node1,node2, label = (""+ percent +" %"))
+    
+    G.render('bixi_graph', view=True)
+    
+    
 if __name__ == '__main__':
     import pandas as pd
     import numpy as np
@@ -167,6 +212,10 @@ if __name__ == '__main__':
     import sklearn.cluster
     import networkx as nx
     import matplotlib.pyplot as plt
+    import os
+    os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
+    from graphviz import Digraph
+    import folium
     
     data = read_trips()
     
@@ -178,10 +227,9 @@ if __name__ == '__main__':
     
     data = cluster_trips(stations_clustered, data)
     
+    data = create_graph_data(data)
     
-    G = create_graph(data)
-    
-    style_graph(G)
+    create_graphviz(data)
     
     #map_clustured(stations_clustered)
     

@@ -32,7 +32,7 @@ def read():
     return data
 
 #creates a bar chart with the departures per day
-def visualizePerDay(data, column_name, color='#494949', title='Departure per day'):
+def visualizePerDay(data, column_name, color='#0000FF', title='Departure per day'):
   
     plt.figure(figsize=(20, 10))
     ax = (data[column_name].groupby(data[column_name].dt.day)
@@ -44,35 +44,37 @@ def visualizePerDay(data, column_name, color='#494949', title='Departure per day
     plt.show()
     
 #creates a bar chart with the departures per hour during the weekend
-def visualizePerHourEnd(data, column_name, color='#494949', title='Departure per hour (Week)'):
+def visualizePerHourEnd(data, column_name, color='#0000FF', title='Departures Per Time Slice (Weekend)'):
     
     #WEEKEND
     dataWeekend = data.drop(data[data['week_day_b'] == 1].index)
     plt.figure(figsize=(20, 10))
     ax = (dataWeekend[column_name].groupby(dataWeekend[column_name])
                          .count()).plot(kind="bar", color=color)
-    ax.set_facecolor('#eeeeee')
-    ax.set_xlabel("Hour of day")
+   
+    ax.set_xlabel("Hour")
     ax.set_xticks(np.arange(0, 75, 3))
     ax.set_xticklabels(np.arange(0, 24, 1)) 
-    ax.set_ylabel("Number of trips")
+    ax.set_ylabel("Number of Trips")
     ax.set_title(title)
+    plt.rcParams.update({'font.size': 22})
     plt.show()
 
 #creates a bar chart with the departures per hour during the week
-def visualizePerHourWeek(data, column_name, color='#494949', title='Departure per hour (Weekend)'):
+def visualizePerHourWeek(data, column_name, color='#0000FF', title='Departure Per Time Slice (Week)'):
     
     #WEEK
     dataWeek = data.drop(data[data['week_day_b'] == 0].index)
     plt.figure(figsize=(20, 10))
     ax = (dataWeek[column_name].groupby(dataWeek[column_name])
                          .count()).plot(kind="bar", color=color)
-    ax.set_facecolor('#eeeeee')
-    ax.set_xlabel("Hour of day")
+   
+    ax.set_xlabel("Hour")
     ax.set_xticks(np.arange(0, 75, 3))
     ax.set_xticklabels(np.arange(0, 24, 1)) 
-    ax.set_ylabel("Number of trips")
+    ax.set_ylabel("Number of Trips")
     ax.set_title(title)
+    plt.rcParams.update({'font.size': 22})
     plt.show()
 
 def foliumMap():
@@ -174,13 +176,13 @@ if __name__ == '__main__':
     from folium.plugins import MarkerCluster
     
     data = read()
-    stations_flow = flowCount(data, 840, 1260)
+    #stations_flow = flowCount(data, 840, 1260)
     
-    densityMap(stations_flow)
+    #densityMap(stations_flow)
     #foliumMap()
     #visualizePerDay(data, 'start_date')
-    #visualizePerHourWeek(data, 'time_slice')
-    #visualizePerHourEnd(data, 'time_slice')
+    visualizePerHourWeek(data, 'time_slice')
+    visualizePerHourEnd(data, 'time_slice')
     
 
 
