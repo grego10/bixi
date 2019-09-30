@@ -44,34 +44,29 @@ def visualizePerDay(data, column_name, color='#0000FF', title='Departure per day
     plt.show()
     
 #creates a bar chart with the departures per hour during the weekend
-def visualizePerHourEnd(data, column_name, color='#0000FF', title='Departures Per Time Slice (Weekend)'):
+def visualizePerHourEnd(data, column_name, color='#0000FF', title='Avreage Number of Trips Per Hour During the Weekend - Mai 2019'):
     
     #WEEKEND
     dataWeekend = data.drop(data[data['week_day_b'] == 1].index)
     plt.figure(figsize=(20, 10))
-    ax = (dataWeekend[column_name].groupby(dataWeekend[column_name])
-                         .count()).plot(kind="bar", color=color)
+    ax = ((dataWeekend[column_name].groupby(dataWeekend[column_name].dt.hour)
+                         .count())/8).plot(kind="bar", color=color)
    
     ax.set_xlabel("Hour")
-    ax.set_xticks(np.arange(0, 75, 3))
-    ax.set_xticklabels(np.arange(0, 24, 1)) 
     ax.set_ylabel("Number of Trips")
     ax.set_title(title)
     plt.rcParams.update({'font.size': 22})
     plt.show()
 
 #creates a bar chart with the departures per hour during the week
-def visualizePerHourWeek(data, column_name, color='#0000FF', title='Departure Per Time Slice (Week)'):
+def visualizePerHourWeek(data, column_name, color='#0000FF', title='Avreage Number of Trips Per Hour During the Week - Mai 2019'):
     
-    #WEEK
     dataWeek = data.drop(data[data['week_day_b'] == 0].index)
     plt.figure(figsize=(20, 10))
-    ax = (dataWeek[column_name].groupby(dataWeek[column_name])
-                         .count()).plot(kind="bar", color=color)
+    ax = ((dataWeek[column_name].groupby(dataWeek[column_name].dt.hour)
+                         .count())/23).plot(kind="bar", color=color)
    
     ax.set_xlabel("Hour")
-    ax.set_xticks(np.arange(0, 75, 3))
-    ax.set_xticklabels(np.arange(0, 24, 1)) 
     ax.set_ylabel("Number of Trips")
     ax.set_title(title)
     plt.rcParams.update({'font.size': 22})
@@ -121,7 +116,7 @@ def flowCount(data, start_time, end_time):
     data_e = data.groupby('end_station_code').size().to_frame('arrivals_cnt').reset_index()  
     data_e = data_e.rename(columns={'end_station_code':'Code'})
     
-    #add a net departur column
+    #add a net departure column
     stations = pd.merge(stations, data_s, on='Code')
     stations = pd.merge(stations, data_e, on='Code')
     stations['net_departures'] = pd.Series( index=data.index)
@@ -133,18 +128,19 @@ def flowCount(data, start_time, end_time):
     return stations
     
 def densityMap(stations):
-
+    
+    #generate a new map
     Montreal = [45.508154, -73.587450]
     map = folium.Map(location = Montreal,
                 zoom_start = 12,
                 tiles = "CartoDB positron")
     
+    #calculate stations radius
     stations['radius'] = pd.Series( index=data.index)
-    
     stations['radius'] = np.abs(stations['net_departures'])
     stations['radius'] = stations['radius'].astype(float)
 
-    
+    #set stations color
     stations['color'] = '#E80018' # red 
     stations.loc[stations['net_departures'].between(-10000,0), 'color'] = '#00E85C' # green
      
@@ -155,7 +151,7 @@ def densityMap(stations):
     color = stations['color'].values
     net_dep = stations['net_departures']
   
-    
+    #populate map
     for _lat, _lon, _rad, _color, _name, _nd in zip(lat, lon, rad, color, name, net_dep):
         folium.Circle(location = [_lat,_lon], 
                             radius = _rad/5,
@@ -163,7 +159,7 @@ def densityMap(stations):
                             tooltip = _name + " / net. dep:" +str(_nd),
                             fill = True).add_to(map)
   
-    
+    #save map
     f = 'maps/map_density_840_1260.html'
     map.save(f)
 
@@ -181,8 +177,8 @@ if __name__ == '__main__':
     #densityMap(stations_flow)
     #foliumMap()
     #visualizePerDay(data, 'start_date')
-    visualizePerHourWeek(data, 'time_slice')
-    visualizePerHourEnd(data, 'time_slice')
+    visualizePerHourWeek(data, 'start_date')
+    visualizePerHourEnd(data, 'start_date')
     
 
 

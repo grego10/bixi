@@ -8,13 +8,12 @@ Created on Sun Jul 28 14:56:28 2019
 def read_trips():
       
     data_files = glob.glob('data2018/OD_2018-*.csv')
-    
     li = []
-    
     for filename in data_files:
         df = pd.read_csv(filename, index_col=None, header=0)
         li.append(df)
-
+    
+    #convert argument to datetime
     data = pd.concat(li, axis=0, ignore_index=True)
     data['start_date'] = pd.to_datetime(data['start_date'], format='%Y-%m-%d', errors='coerce')
     data['end_date'] = pd.to_datetime(data['end_date'], format='%Y-%m-%d', errors='coerce')
@@ -167,20 +166,18 @@ def create_graph(data):
     plt.show()
 
 def create_graphviz(data):
+    #create the graph
     G = Digraph(format='png')
-    
     G.attr(rankdir='LR', size='10')
     G.attr('node', shape='circle')
-    
     nodelist = []
+    #prepare the data
     data = data.drop(['count'], axis=1)
     data['from'] =  pd.to_numeric(data['from'], downcast='integer')
     data['to'] =  pd.to_numeric(data['to'], downcast='integer')
     data['from'] =  data['from'].apply(str)
     data['to'] =  data['to'].apply(str)
-    
-    
-            
+    #add the nodes and edges to the graph        
     for idx, row in data.iterrows():
         node1, node2, weight = [str(i) for i in row]
 
@@ -191,17 +188,13 @@ def create_graphviz(data):
         if node2 not in nodelist:
             G.node(node2)
             nodelist.append(node2)
-        
+        #transform the edge label to XX,XX% format
         percent = float(weight)
-        
         percent = percent*100
-        
         percent = round(percent, 2)
-        
         percent = str(percent)
-        
         G.edge(node1,node2, label = (""+ percent +" %"))
-    
+    #show graph
     G.render('bixi_graph', view=True)
     
     

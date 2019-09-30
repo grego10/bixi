@@ -129,6 +129,7 @@ def scatterPlot(dataDay):
     linear_regressor = LinearRegression()
     linear_regressor.fit(X, Y)
     Y_pred_linear = linear_regressor.predict(X)
+    print('Variance score linear: %.2f' % r2_score(Y, Y_pred_linear))
     
     #polynmial degree 2 regression
     polynomial_feat = PolynomialFeatures(degree=2)
@@ -137,6 +138,7 @@ def scatterPlot(dataDay):
     polynomial_regressor.fit(x_poly_2, Y)
     
     Y_pred_poly_2 = polynomial_regressor.predict(x_poly_2)
+    print('Variance score poly2: %.2f' % r2_score(Y, Y_pred_poly_2))
     
     #polynmial degree 3 regression
     polynomial_feat_3 = PolynomialFeatures(degree=3)
@@ -145,13 +147,14 @@ def scatterPlot(dataDay):
     polynomial_regressor_3.fit(x_poly_3, Y)
     
     Y_pred_poly_3 = polynomial_regressor_3.predict(x_poly_3)
-    
-    
+    print('Variance score poly3: %.2f' % r2_score(Y, Y_pred_poly_3))
+
+
     #Ploting the data
     plt.figure(figsize=(20, 10))
-    plt.title('Scatter Plot Temp (°C) and Number of Trips')
+    plt.title('Daily Bike Ridership With Regards to Temperature')
     plt.scatter(X_1,Y,c='blue',marker='o')
-    plt.xlabel('Mean Temp (°C)')
+    plt.xlabel('Mean Temperature (°C)')
     plt.ylabel('Number of Daily Trips')
     plt.plot(X_1, Y_pred_linear, color='red')
     
@@ -211,31 +214,32 @@ if __name__ == '__main__':
     import numpy as np
     import glob
     import matplotlib.pyplot as plt
-    import matplotlib.dates as mdates
     import operator
     from sklearn.linear_model import LinearRegression
     from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.metrics import r2_score
+
     from math import radians, cos, sin, asin, sqrt 
     
     data = readTrips()
-    #dataDay = summarizePerDay(data)
-    #dataWeather = readWeather()
-    #dataDay = mergeWeather(dataDay, dataWeather)
+    dataDay = summarizePerDay(data)
+    dataWeather = readWeather()
+    dataDay = mergeWeather(dataDay, dataWeather)
     
     
-    dataBixi = readBixiStations()
+    #dataBixi = readBixiStations()
     
-    dataBixi = bixiStationsDistance(dataBixi)
-    dataTripCnt = stationsTripCnt(data)
+    #dataBixi = bixiStationsDistance(dataBixi)
+    #dataTripCnt = stationsTripCnt(data)
     
-    dataBixi = mergeDist_TripCnt(dataBixi, dataTripCnt)
-    
-    
+    #dataBixi = mergeDist_TripCnt(dataBixi, dataTripCnt)
     
     
-    scatterPlotMetro(dataBixi)
     
-    #scatterPlot(dataDay)
+    
+    #scatterPlotMetro(dataBixi)
+    
+    scatterPlot(dataDay)
 
 
     
